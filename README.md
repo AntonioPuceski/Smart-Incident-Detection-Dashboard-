@@ -1,167 +1,63 @@
-# 🚨 Smart Incident Detection Dashboard  
+# Smart Incident Detection Dashboard
 
-![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-success?logo=fastapi)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-UI-38B2AC?logo=tailwind-css)
-![Machine Learning](https://img.shields.io/badge/ML-RandomForest-orange?logo=scikit-learn)
+A machine-learning intrusion-detection prototype with a scikit-learn training workflow, persisted Random Forest pipeline, FastAPI prediction endpoint, and React dashboard.
 
-A full-stack project for **network intrusion detection** using **Machine Learning**.  
-It demonstrates skills in **data science, backend APIs, frontend development, and system integration**.  
+## Verified workflow
 
----
+1. `download_data.py` downloads the CICIDS2018 source data.
+2. The numbered notebooks explore and preprocess the data, train/evaluate the model, and persist the pipeline with joblib.
+3. `backend/app.py` loads the saved pipeline and feature list and exposes predictions through FastAPI.
+4. The Vite/React frontend submits flow features and visualizes the returned class probabilities.
 
-## 📸 Demo
+No accuracy figure is claimed here; consult the executed notebook output when evaluating a particular training run.
 
-![Dashboard Screenshot](docs/demo.png)  
+## Project structure
 
+```text
+backend/
+  app.py
+frontend/
+  src/
+notebooks/
+  0_setup.ipynb
+  1_explore.ipynb
+  2_preprocess_and_train.ipynb
+  3_deploy_test.ipynb
+  models/
+requirements.txt
+download_data.py
+```
 
----
-
-## 📂 Project Structure
-
-smart-incident-dashboard/
-│
-├── backend/ # FastAPI backend (API + ML model loading)
-│ └── app.py
-│
-├── notebooks/ # Jupyter notebooks & training assets
-│ └── models/
-│ ├── rf_pipeline.joblib # Trained Random Forest model
-│ └── feature_names.json # Features used in training
-│
-├── frontend/ # React dashboard
-│ ├── src/
-│ │ ├── App.jsx # Main React app
-│ │ ├── main.jsx # Entry point
-│ │ └── style.css # Tailwind setup
-│ └── ...
-│
-└── README.md
-
-
----
-
-## 🚀 Features
-
-* 🔎 Train & save ML model (Random Forest).  
-* ⚡ Serve predictions via FastAPI backend.  
-* 🧩 Swagger UI for interactive API testing.  
-* 🎨 React + Tailwind dashboard for inputs & predictions.  
-* 📊 Recharts pie chart for probability visualization.  
-* 🌐 End-to-end workflow: **ML → API → Dashboard**.  
-
----
-
-## ⚙️ Setup Instructions  
-
-### 1. Backend (FastAPI + ML)  
+## Backend and model setup
 
 ```bash
-# Create venv
 python -m venv .venv
-.\.venv\Scripts\activate   # Windows
-source .venv/bin/activate  # Linux/Mac
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run backend
 uvicorn backend.app:app --reload --port 8000
-
 ```
-👉 Backend: http://127.0.0.1:8000
 
-👉 Swagger: http://127.0.0.1:8000/docs
+The included persisted model files allow the API to start without retraining. To reproduce training, run the numbered notebooks in order after obtaining the dataset. A new training run should write the pipeline and feature-name artifacts expected by `backend/app.py`.
 
-2. Frontend (React + Tailwind + Vite)
+Swagger/OpenAPI documentation is available at `http://127.0.0.1:8000/docs` while the API is running.
+
+## Frontend setup
+
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
-👉 Frontend: http://localhost:5173
 
-🖥️ Usage Flow
+Open the local URL printed by Vite. Start the API first so prediction requests can complete.
 
-Start backend (uvicorn) and frontend (npm run dev).
+## Dataset
 
-Enter flow features in dashboard form.
+The project uses the [CICIDS2018 dataset from the Canadian Institute for Cybersecurity](https://www.unb.ca/cic/datasets/ids-2018.html). Raw dataset files are not committed.
 
-Click Predict.
+## Limitations
 
-Get results:
+- This is an educational prototype, not a production intrusion-detection system.
+- Predictions depend on the included training data and feature schema.
+- The repository does not include a verified live deployment or a current product screenshot.
 
-✅ Benign (green)
-
-🚨 Attack (red)
-
-📊 Pie chart shows probability breakdown
-
-🔍 Feature Definitions
-
-Flow Duration → Time span of the flow (ms). Long/short flows may indicate benign vs. attack.
-
-Tot Fwd Pkts → Packets sent from source → destination. High values may suggest scans/floods.
-
-Tot Bwd Pkts → Packets sent from destination → source. Imbalance may indicate suspicious traffic.
-
-TotLen Fwd Pkts → Total size (bytes) of forward packets. Helps detect bulk data transfer/exfiltration.
-
-⚡ These are sample features — IDS datasets often use 80+ features.
-
-📊 Example API Request
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
--H "Content-Type: application/json" \
--d '{
-  "data": {
-    "Flow Duration": 1000,
-    "Tot Fwd Pkts": 20,
-    "Tot Bwd Pkts": 10,
-    "TotLen Fwd Pkts": 500
-  }
-}'
-```
-Response
-```bash
-{
-  "prediction": 1,
-  "probability": [0.0, 1.0]
-}
-
-```
-0 = Benign
-
-1 = Attack
-
-📖 Learning Outcomes
-
-This project shows experience in:
-
-ML Engineering → Preprocessing, model training, persistence (joblib).
-
-Backend Development → FastAPI, REST APIs, CORS, Swagger docs.
-
-Frontend Development → React hooks, Axios, TailwindCSS, Recharts.
-
-System Integration → Debugging APIs, handling JSON, full-stack design.
-
-📊 Dataset
-
-This project was built using the CICIDS2018 Intrusion Detection Dataset.
-Due to GitHub’s file size limits, raw CSV files are not included here.
-
-👉 You can download the dataset from:
-CICIDS2018 Dataset – Canadian Institute for Cybersecurity(https://www.unb.ca/cic/datasets/ids-2018.html?)
-
-(In this repo, only a sampled/cleaned version of the dataset was used for model training.)
-
-📌 Credits
-
-Built with ❤️ using:
-
-Python, FastAPI, scikit-learn, joblib (backend & ML)
-
-React, Vite, TailwindCSS, Recharts, Axios (frontend)
 
