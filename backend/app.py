@@ -48,6 +48,6 @@ def predict(request: PredictRequest):
 
         pred = model.predict(X)[0]
         proba = model.predict_proba(X)[0].tolist() if hasattr(model, "predict_proba") else None
-        return {"prediction": int(pred), "probability": proba}
+        return {"prediction": int(pred), "probability": proba, "classes": [int(value) for value in model.classes_]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

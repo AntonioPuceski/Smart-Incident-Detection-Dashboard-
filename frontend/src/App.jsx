@@ -30,10 +30,11 @@ export default function App() {
 
   const COLORS = ["#4ade80", "#f87171"]; // green = benign, red = attack
   const chartData = result?.probability
-    ? [
-        { name: "Benign (0)", value: result.probability[0] },
-        { name: "Attack (1)", value: result.probability[1] ?? 0 },
-      ]
+    ? result.probability.map((value, index) => ({
+        name: result.classes?.[index] === 0 ? "Benign (0)" : result.classes?.[index] === 1 ? "Attack (1)" : `Class ${index}`,
+        value,
+        classId: result.classes?.[index],
+      }))
     : [];
 
   return (
@@ -79,6 +80,11 @@ export default function App() {
             </span>
           </p>
 
+          {result.classes?.length === 1 && (
+            <p className="mt-3 text-sm text-amber-800">
+              This saved model contains only one class. Retraining with both benign and attack examples is required for binary detection.
+            </p>
+          )}
           {result.probability && (
             <PieChart width={400} height={300}>
               <Pie
@@ -90,7 +96,7 @@ export default function App() {
                 label
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={index} fill={COLORS[entry.classId === 0 ? 0 : 1]} />
                 ))}
               </Pie>
               <Tooltip />

@@ -1,167 +1,199 @@
-# 🚨 Smart Incident Detection Dashboard  
+# Smart Incident Detection Dashboard
 
-![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-success?logo=fastapi)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-UI-38B2AC?logo=tailwind-css)
-![Machine Learning](https://img.shields.io/badge/ML-RandomForest-orange?logo=scikit-learn)
+**From network-flow features to a machine-learning prediction.**
 
-A full-stack project for **network intrusion detection** using **Machine Learning**.  
-It demonstrates skills in **data science, backend APIs, frontend development, and system integration**.  
+A full-stack learning project by **Antonio Puceski**, connecting a saved scikit-learn Random Forest model to a **FastAPI** service and a **React** dashboard. Enter flow statistics, request a prediction, and inspect the model's class probabilities.
 
----
+[Demo](#demo) · [Run locally](#run-locally) · [How it works](#how-it-works)
 
-## 📸 Demo
+![Incident dashboard input form](docs/media/input-form.jpg)
 
-![Dashboard Screenshot](docs/demo.png)  
+## Demo
 
+![Input-to-prediction walkthrough](docs/media/demo.gif)
 
----
+[Watch or download the MP4 screen tour](docs/media/demo.mp4?raw=true).
 
-## 📂 Project Structure
+The media shows the real local frontend and API using manually entered example values. These are model outputs, not verified incidents or a live network feed. The silent 12-second video is a slideshow of captured screens.
 
-smart-incident-dashboard/
-│
-├── backend/ # FastAPI backend (API + ML model loading)
-│ └── app.py
-│
-├── notebooks/ # Jupyter notebooks & training assets
-│ └── models/
-│ ├── rf_pipeline.joblib # Trained Random Forest model
-│ └── feature_names.json # Features used in training
-│
-├── frontend/ # React dashboard
-│ ├── src/
-│ │ ├── App.jsx # Main React app
-│ │ ├── main.jsx # Entry point
-│ │ └── style.css # Tailwind setup
-│ └── ...
-│
-└── README.md
+### Prediction and probability chart
 
+![Model prediction and class probabilities](docs/media/prediction.jpg)
 
----
+### Interactive API documentation
 
-## 🚀 Features
+![FastAPI Swagger documentation](docs/media/api-docs.jpg)
 
-* 🔎 Train & save ML model (Random Forest).  
-* ⚡ Serve predictions via FastAPI backend.  
-* 🧩 Swagger UI for interactive API testing.  
-* 🎨 React + Tailwind dashboard for inputs & predictions.  
-* 📊 Recharts pie chart for probability visualization.  
-* 🌐 End-to-end workflow: **ML → API → Dashboard**.  
+## Features
 
----
+- A four-field form for network-flow statistics.
+- FastAPI inference endpoint returning a binary class and probability array.
+- Recharts visualization of benign and attack class probabilities.
+- Saved model and ordered feature schema included in the repository.
+- Jupyter notebooks covering exploration, preprocessing, training and deployment testing.
+- Built-in Swagger UI for inspecting the API.
 
-## ⚙️ Setup Instructions  
+## How it works
 
-### 1. Backend (FastAPI + ML)  
+```text
+React form --> POST /predict --> pandas feature alignment
+                                      |
+                                      v
+                         Saved scikit-learn classifier
+                                      |
+                                      v
+                  JSON class + probabilities --> React chart
+```
 
-```bash
-# Create venv
+The training notebook defines median imputation, standard scaling and a Random Forest with 200 trees, balanced class weights and a fixed random seed. It uses an 80/20 stratified train/test split and maps benign labels to 0 and all other labels to 1.
+
+At inference time, the API constructs a DataFrame in the order stored in `feature_names.json`. Missing features and nonnumeric values become zero; extra keys are ignored. The model expects **78 features**, while the UI supplies **four**, leaving 74 filled with zero. This is a demonstration of the ML-to-web integration, not a validated production IDS.
+
+| Form field | Meaning |
+| --- | --- |
+| Flow Duration | Duration of a flow; use the source dataset's measurement convention |
+| Tot Fwd Pkts | Number of packets in the forward direction |
+| Tot Bwd Pkts | Number of packets in the reverse direction |
+| TotLen Fwd Pkts | Total forward packet length in bytes |
+
+The UI does not document or convert duration units. Do not assume milliseconds without checking the feature-extraction source.
+
+## Stack
+
+| Layer | Tools |
+| --- | --- |
+| Frontend | React, Vite, Tailwind CSS, Axios, Recharts |
+| API | Python, FastAPI, Pydantic, Uvicorn |
+| Model | scikit-learn, pandas, NumPy, joblib |
+| Training | Jupyter, Matplotlib, Seaborn |
+
+## Run locally
+
+Use **Python 3.14** (the runtime verified for this demo), **Node.js 22.12+** and npm. The saved artifact was serialized with scikit-learn 1.7.2; use the matching version in `requirements-runtime.txt`.
+
+```sh
+git clone https://github.com/AntonioPuceski/Smart-Incident-Detection-Dashboard-.git
+cd Smart-Incident-Detection-Dashboard-
 python -m venv .venv
-.\.venv\Scripts\activate   # Windows
-source .venv/bin/activate  # Linux/Mac
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run backend
-uvicorn backend.app:app --reload --port 8000
-
 ```
-👉 Backend: http://127.0.0.1:8000
 
-👉 Swagger: http://127.0.0.1:8000/docs
+Activate the environment:
 
-2. Frontend (React + Tailwind + Vite)
-```bash
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```sh
+# macOS / Linux
+source .venv/bin/activate
+```
+
+Install the inference dependencies and start FastAPI:
+
+```sh
+python -m pip install -r requirements-runtime.txt
+python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+```
+
+In another terminal:
+
+```sh
 cd frontend
-npm install
-npm run dev
+npm ci
+npm run dev -- --host localhost --port 5173 --strictPort
 ```
-👉 Frontend: http://localhost:5173
 
-🖥️ Usage Flow
+Open [http://localhost:5173](http://localhost:5173). Use this exact frontend origin: the backend CORS configuration currently allows localhost:5173, and the frontend API URL is fixed to 127.0.0.1:8000.
 
-Start backend (uvicorn) and frontend (npm run dev).
+- API status: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+- Interactive API docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-Enter flow features in dashboard form.
+The original `requirements.txt` contains notebook/data dependencies. It does not install FastAPI or Uvicorn; the runtime requirements file supplies those.
 
-Click Predict.
+## API example
 
-Get results:
+POST `/predict` with this JSON body:
 
-✅ Benign (green)
-
-🚨 Attack (red)
-
-📊 Pie chart shows probability breakdown
-
-🔍 Feature Definitions
-
-Flow Duration → Time span of the flow (ms). Long/short flows may indicate benign vs. attack.
-
-Tot Fwd Pkts → Packets sent from source → destination. High values may suggest scans/floods.
-
-Tot Bwd Pkts → Packets sent from destination → source. Imbalance may indicate suspicious traffic.
-
-TotLen Fwd Pkts → Total size (bytes) of forward packets. Helps detect bulk data transfer/exfiltration.
-
-⚡ These are sample features — IDS datasets often use 80+ features.
-
-📊 Example API Request
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
--H "Content-Type: application/json" \
--d '{
+```json
+{
   "data": {
     "Flow Duration": 1000,
     "Tot Fwd Pkts": 20,
     "Tot Bwd Pkts": 10,
     "TotLen Fwd Pkts": 500
   }
-}'
-```
-Response
-```bash
-{
-  "prediction": 1,
-  "probability": [0.0, 1.0]
 }
-
 ```
-0 = Benign
 
-1 = Attack
+Observed response from the included artifact:
 
-📖 Learning Outcomes
+```json
+{"prediction": 1, "probability": [1.0], "classes": [1]}
+```
 
-This project shows experience in:
+Each probability corresponds to the same-index entry in `classes`. Label 0 means benign and 1 means attack. The included model has only class 1; a probability of 1.0 here is **not evidence that a real attack occurred**.
 
-ML Engineering → Preprocessing, model training, persistence (joblib).
+## Model status and limitations
 
-Backend Development → FastAPI, REST APIs, CORS, Swagger docs.
+The included `rf_pipeline.joblib` is actually a **100-tree RandomForestClassifier**, not the 200-tree preprocessing pipeline defined in the training notebook. Its stored classes are `[1]`. The model artifact and notebook are therefore not aligned, and the artifact cannot distinguish benign traffic from attacks.
 
-Frontend Development → React hooks, Axios, TailwindCSS, Recharts.
+Before using this beyond an integration demo:
 
-System Integration → Debugging APIs, handling JSON, full-stack design.
+1. Verify source labels and ensure both benign and attack examples survive preprocessing.
+2. Remove index-like fields such as `Unnamed: 0` from the training feature set; it is currently included in the 78-feature schema.
+3. Retrain and export the intended pipeline with its matching feature schema and dependency versions.
+4. Evaluate on an independent holdout and report per-class precision, recall, confusion matrix and false-positive rate.
+5. Supply a complete, consistently extracted feature vector instead of zero-filling most fields.
 
-📊 Dataset
+There is no live packet capture, stream ingestion, incident history or authentication in this version. Model probabilities are not calibrated incident confidence. Deployment would also require configurable API origins, stricter input validation and error handling.
 
-This project was built using the CICIDS2018 Intrusion Detection Dataset.
-Due to GitHub’s file size limits, raw CSV files are not included here.
+## Data and notebooks
 
-👉 You can download the dataset from:
-CICIDS2018 Dataset – Canadian Institute for Cybersecurity(https://www.unb.ca/cic/datasets/ids-2018.html?)
+The notebooks reference `data/cleaned_ids2018_sampled.csv`, which is not included. `download_data.py` downloads a cleaned CICIDS2018 dataset through KaggleHub, but does not implement the sampling step or guarantee that exact filename. Prepare the required CSV and review notebook working directories before running the training workflow.
 
-(In this repo, only a sampled/cleaned version of the dataset was used for model training.)
+| Notebook | Purpose |
+| --- | --- |
+| `0_setup.ipynb` | Inspect working directories and data files |
+| `1_explore.ipynb` | Inspect labels, feature types and distributions |
+| `2_preprocess_and_train.ipynb` | Prepare features, split data, train, evaluate and export |
+| `3_deploy_test.ipynb` | Exercise the deployment workflow |
 
-📌 Credits
+Install the original `requirements.txt` if you want the notebook tooling. No retraining or benchmark reproduction was performed for these portfolio materials.
 
-Built with ❤️ using:
+## Project layout
 
-Python, FastAPI, scikit-learn, joblib (backend & ML)
+```text
+backend/app.py                       FastAPI model loading and inference
+frontend/src/App.jsx                Form, API request and probability chart
+notebooks/                          Exploration and training notebooks
+notebooks/models/rf_pipeline.joblib  Included classifier artifact
+notebooks/models/feature_names.json  Ordered 78-feature schema
+requirements-runtime.txt            Verified inference dependencies
+requirements.txt                    Notebook/data dependencies
+download_data.py                    KaggleHub dataset download helper
+docs/media/                         Screenshots and video tour
+```
 
-React, Vite, TailwindCSS, Recharts, Axios (frontend)
+## Verification
 
+- Frontend production build and ESLint pass.
+- Saved model loads with scikit-learn 1.7.2.
+- The example request was tested through the running API and browser.
+- The chart uses the model's actual class ordering, including its single-class limitation.
+- npm reported 26 dependency audit findings during setup; these remain unresolved. The build also warns about a bundle above 500 kB and outdated browser metadata.
+- There is no automated test suite or reproduced model-quality benchmark.
+
+To repeat the frontend checks:
+
+```sh
+cd frontend
+npm run build
+npm run lint
+```
+
+## Credits
+
+Built by **[Antonio Puceski](https://github.com/AntonioPuceski)** · [Portfolio](https://antoniopuceski.github.io/)
+
+Dataset provenance: CICIDS2018, with a cleaned dataset downloaded via KaggleHub. Consult the dataset providers for usage and attribution terms. Screenshots use manually entered numeric examples rather than private network logs.
